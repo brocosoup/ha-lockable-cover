@@ -3,42 +3,59 @@
   "config": {
     "step": {
       "user": {
-        "title": "Ajouter un volet verrouillable",
-        "description": "Crée un proxy de volet qui refuse de s'ouvrir tant que le verrou choisi est engagé. La fermeture et l'arrêt restent toujours autorisés.",
-        "data": {
-          "name": "Nom",
-          "cover_entity": "Volet source",
-          "lock_entity": "Entité de verrouillage",
-          "invert": "Inverser l'état du verrou"
-        },
-        "data_description": {
-          "name": "Nom convivial de l'entité volet proxy.",
-          "cover_entity": "Le volet réel auquel ce proxy transmet ses commandes.",
-          "lock_entity": "Tant que cette entité est verrouillée, les commandes d'ouverture sont rejetées.",
-          "invert": "Considérer l'entité comme verrouillée lorsqu'elle est à off ou déverrouillée."
-        }
+        "title": "Ajouter Volet verrouillable",
+        "description": "L'intégration ne s'ajoute qu'une seule fois. Vous créez ensuite un proxy pour chaque volet à protéger, depuis la page de l'intégration."
       }
     },
-    "error": {
-      "recursive_source": "Le volet sélectionné est déjà un proxy de volet verrouillable. Choisissez plutôt le volet sous-jacent."
-    },
     "abort": {
-      "already_configured": "Ce volet possède déjà un proxy de volet verrouillable."
+      "single_instance_allowed": "Volet verrouillable est déjà configuré. Ajoutez un autre volet depuis sa page d'intégration plutôt que de la configurer à nouveau."
     }
   },
-  "options": {
-    "step": {
-      "init": {
-        "title": "Options du volet verrouillable",
-        "description": "Modifiez l'entité qui verrouille ce volet. Le volet source ne peut pas être modifié après la configuration.",
-        "data": {
-          "lock_entity": "Entité de verrouillage",
-          "invert": "Inverser l'état du verrou"
+  "config_subentries": {
+    "cover": {
+      "entry_type": "Volet verrouillable",
+      "initiate_flow": {
+        "user": "Ajouter un volet",
+        "reconfigure": "Reconfigurer le volet"
+      },
+      "step": {
+        "user": {
+          "title": "Ajouter un volet verrouillable",
+          "description": "Crée un proxy qui refuse de s'ouvrir tant que le verrou choisi est engagé. La fermeture et l'arrêt restent toujours autorisés.",
+          "data": {
+            "name": "Nom",
+            "cover_entity": "Volet source",
+            "lock_entity": "Entité de verrouillage",
+            "invert": "Inverser l'état du verrou"
+          },
+          "data_description": {
+            "name": "Nom convivial de l'entité volet proxy.",
+            "cover_entity": "Le volet réel auquel ce proxy transmet ses commandes.",
+            "lock_entity": "Tant que cette entité est verrouillée, les commandes d'ouverture sont rejetées.",
+            "invert": "Considérer l'entité comme verrouillée lorsqu'elle est à off ou déverrouillée."
+          }
         },
-        "data_description": {
-          "lock_entity": "Tant que cette entité est verrouillée, les commandes d'ouverture sont rejetées.",
-          "invert": "Considérer l'entité comme verrouillée lorsqu'elle est à off ou déverrouillée."
+        "reconfigure": {
+          "title": "Reconfigurer le volet verrouillable",
+          "description": "Ce proxy contrôle {source_entity}. Le volet source ne peut pas être modifié, car cela changerait l'identité de l'entité.",
+          "data": {
+            "name": "Nom",
+            "lock_entity": "Entité de verrouillage",
+            "invert": "Inverser l'état du verrou"
+          },
+          "data_description": {
+            "name": "Nom convivial de l'entité volet proxy.",
+            "lock_entity": "Tant que cette entité est verrouillée, les commandes d'ouverture sont rejetées.",
+            "invert": "Considérer l'entité comme verrouillée lorsqu'elle est à off ou déverrouillée."
+          }
         }
+      },
+      "error": {
+        "recursive_source": "Le volet sélectionné est déjà un proxy de volet verrouillable. Choisissez plutôt le volet sous-jacent.",
+        "already_configured": "Ce volet possède déjà un proxy de volet verrouillable."
+      },
+      "abort": {
+        "reconfigure_successful": "Le volet verrouillable a été mis à jour."
       }
     }
   },

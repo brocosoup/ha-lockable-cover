@@ -14,7 +14,7 @@ from homeassistant.components.cover import (
     CoverEntity,
     CoverEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigSubentry
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
@@ -42,7 +42,14 @@ from homeassistant.helpers.event import (
     async_track_state_change_event,
 )
 
-from .const import CONF_COVER_ENTITY, CONF_INVERT, CONF_LOCK_ENTITY, CONF_NAME, DOMAIN
+from .const import (
+    CONF_COVER_ENTITY,
+    CONF_INVERT,
+    CONF_LOCK_ENTITY,
+    CONF_NAME,
+    DOMAIN,
+    SUBENTRY_TYPE_COVER,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -58,8 +65,11 @@ async def async_setup_entry(
     entry: ConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the lockable cover platform from a config entry."""
-    async_add_entities([LockableCover(entry)])
+    """Set up one proxy cover per subentry."""
+    for subentry_id, subentry in entry.subentries.items():
+        if subentry.subentry_type != SUBENTRY_TYPE_COVER:
+            continue
+        async_add_entities([LockableCover(subentry)], config_subentry_id=subentry_id)
 
 
 class LockableCover(CoverEntity):
@@ -67,19 +77,14 @@ class LockableCover(CoverEntity):
 
     _attr_should_poll = False
 
-    def __init__(self, entry: ConfigEntry) -> None:
-        """Initialize the proxy cover from its config entry."""
-        self._entry = entry
-        self._source_entity: str = entry.data[CONF_COVER_ENTITY]
-        self._lock_entity: str = entry.options.get(
-            CONF_LOCK_ENTITY, entry.data[CONF_LOCK_ENTITY]
-        )
-        self._invert: bool = entry.options.get(
-            CONF_INVERT, entry.data.get(CONF_INVERT, False)
-        )
+    def __init__(self, subentry: ConfigSubentry) -> None:
+        """Initialize the proxy cover from its subentry."""
+        self._source_entity: str = subentry.data[CONF_COVER_ENTITY]
+        self._lock_entity: str = subentry.data[CONF_LOCK_ENTITY]
+        self._invert: bool = subentry.data.get(CONF_INVERT, False)
         self._lock_warning_logged = False
-        self._attr_unique_id = entry.entry_id
-        self._attr_name = entry.data[CONF_NAME]
+        self._attr_unique_id = subentry.subentry_id
+        self._attr_name = subentry.data[CONF_NAME]
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to source cover and lock state changes."""

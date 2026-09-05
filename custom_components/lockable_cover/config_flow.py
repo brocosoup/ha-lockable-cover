@@ -10,7 +10,8 @@ from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlow,
+    ConfigSubentryFlow,
+    SubentryFlowResult,
 )
 from homeassistant.core import callback
 from homeassistant.helpers import entity_registry as er
@@ -21,22 +22,62 @@ from homeassistant.helpers.selector import (
     EntitySelectorConfig,
 )
 
-from .const import CONF_COVER_ENTITY, CONF_INVERT, CONF_LOCK_ENTITY, CONF_NAME, DOMAIN
+from .const import (
+    CONF_COVER_ENTITY,
+    CONF_INVERT,
+    CONF_LOCK_ENTITY,
+    CONF_NAME,
+    DOMAIN,
+    SUBENTRY_TYPE_COVER,
+)
+
+TITLE = "Lockable Cover"
 
 LOCK_SELECTOR = EntitySelector(
     EntitySelectorConfig(domain=["lock", "switch", "input_boolean"])
 )
 
 
-class LockableCoverConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for lockable cover."""
+def _lock_schema(name: str = "", invert: bool = False) -> dict[Any, Any]:
+    """Return the fields shared by the add and reconfigure steps."""
+    return {
+        vol.Required(CONF_NAME, default=name): str,
+        vol.Required(CONF_LOCK_ENTITY): LOCK_SELECTOR,
+        vol.Optional(CONF_INVERT, default=invert): BooleanSelector(
+            BooleanSelectorConfig()
+        ),
+    }
 
-    VERSION = 1
+
+class LockableCoverConfigFlow(ConfigFlow, domain=DOMAIN):
+    """Handle the single container entry for lockable cover."""
+
+    VERSION = 2
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle the initial setup step."""
+        """Create the one entry that holds every proxy cover."""
+        if self._async_current_entries():
+            return self.async_abort(reason="single_instance_allowed")
+        return self.async_create_entry(title=TITLE, data={})
+
+    @classmethod
+    @callback
+    def async_get_supported_subentry_types(
+        cls, config_entry: ConfigEntry
+    ) -> dict[str, type[ConfigSubentryFlow]]:
+        """Return the subentry types this integration supports."""
+        return {SUBENTRY_TYPE_COVER: LockableCoverSubentryFlow}
+
+
+class LockableCoverSubentryFlow(ConfigSubentryFlow):
+    """Add or reconfigure one proxy cover."""
+
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Add a proxy for a source cover."""
         errors: dict[str, str] = {}
 
         if user_input is not None:
@@ -44,66 +85,62 @@ class LockableCoverConfigFlow(ConfigFlow, domain=DOMAIN):
             registry_entry = er.async_get(self.hass).async_get(cover_entity)
             if registry_entry is not None and registry_entry.platform == DOMAIN:
                 errors[CONF_COVER_ENTITY] = "recursive_source"
+            elif any(
+                subentry.data.get(CONF_COVER_ENTITY) == cover_entity
+                for subentry in self._get_entry().subentries.values()
+            ):
+                errors[CONF_COVER_ENTITY] = "already_configured"
             else:
-                await self.async_set_unique_id(cover_entity)
-                self._abort_if_unique_id_configured()
                 return self.async_create_entry(
-                    title=user_input[CONF_NAME], data=user_input
+                    title=user_input[CONF_NAME],
+                    data=user_input,
+                    unique_id=cover_entity,
                 )
 
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_NAME): str,
                     vol.Required(CONF_COVER_ENTITY): EntitySelector(
                         EntitySelectorConfig(domain="cover")
                     ),
-                    vol.Required(CONF_LOCK_ENTITY): LOCK_SELECTOR,
-                    vol.Optional(CONF_INVERT, default=False): BooleanSelector(
-                        BooleanSelectorConfig()
-                    ),
+                    **_lock_schema(),
                 }
             ),
             errors=errors,
         )
 
-    @staticmethod
-    @callback
-    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
-        """Return the options flow."""
-        return LockableCoverOptionsFlow(config_entry)
-
-
-class LockableCoverOptionsFlow(OptionsFlow):
-    """Handle lockable cover options."""
-
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Store the entry the options belong to."""
-        self._entry = config_entry
-
-    async def async_step_init(
+    async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle the options step."""
-        if user_input is not None:
-            return self.async_create_entry(data=user_input)
+    ) -> SubentryFlowResult:
+        """Change the lock of an existing proxy.
 
-        options = self._entry.options
-        data = self._entry.data
+        The source cover is deliberately absent: changing it would change the
+        identity of the entity rather than reconfigure it.
+        """
+        subentry = self._get_reconfigure_subentry()
+
+        if user_input is not None:
+            self.hass.config_entries.async_update_subentry(
+                self._get_entry(),
+                subentry,
+                data={**subentry.data, **user_input},
+                title=user_input[CONF_NAME],
+            )
+            return self.async_abort(reason="reconfigure_successful")
 
         return self.async_show_form(
-            step_id="init",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(
-                        CONF_LOCK_ENTITY,
-                        default=options.get(CONF_LOCK_ENTITY, data[CONF_LOCK_ENTITY]),
-                    ): LOCK_SELECTOR,
-                    vol.Optional(
-                        CONF_INVERT,
-                        default=options.get(CONF_INVERT, data.get(CONF_INVERT, False)),
-                    ): BooleanSelector(BooleanSelectorConfig()),
-                }
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                vol.Schema(
+                    _lock_schema(
+                        name=subentry.data[CONF_NAME],
+                        invert=subentry.data.get(CONF_INVERT, False),
+                    )
+                ),
+                subentry.data,
             ),
+            description_placeholders={
+                "source_entity": subentry.data[CONF_COVER_ENTITY]
+            },
         )

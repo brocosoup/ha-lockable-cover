@@ -3,42 +3,59 @@
   "config": {
     "step": {
       "user": {
-        "title": "Add lockable cover",
-        "description": "Create a cover proxy that refuses to open while the chosen lock is engaged. Closing and stopping are always allowed.",
-        "data": {
-          "name": "Name",
-          "cover_entity": "Source cover",
-          "lock_entity": "Lock entity",
-          "invert": "Invert lock state"
-        },
-        "data_description": {
-          "name": "Friendly name for the proxy cover entity.",
-          "cover_entity": "The real cover this proxy forwards its commands to.",
-          "lock_entity": "While this entity is locked, opening commands are rejected.",
-          "invert": "Treat the lock entity as locked when it is off or unlocked."
-        }
+        "title": "Add Lockable Cover",
+        "description": "This adds Lockable Cover once. You then add a proxy for each cover you want to protect, from the integration page."
       }
     },
-    "error": {
-      "recursive_source": "The selected cover is already a lockable cover proxy. Pick the underlying cover instead."
-    },
     "abort": {
-      "already_configured": "This cover already has a lockable cover proxy."
+      "single_instance_allowed": "Lockable Cover is already set up. Add another cover from its integration page instead of setting it up again."
     }
   },
-  "options": {
-    "step": {
-      "init": {
-        "title": "Lockable cover options",
-        "description": "Change which entity locks this cover. The source cover cannot be changed after setup.",
-        "data": {
-          "lock_entity": "Lock entity",
-          "invert": "Invert lock state"
+  "config_subentries": {
+    "cover": {
+      "entry_type": "Lockable cover",
+      "initiate_flow": {
+        "user": "Add cover",
+        "reconfigure": "Reconfigure cover"
+      },
+      "step": {
+        "user": {
+          "title": "Add a lockable cover",
+          "description": "Create a proxy that refuses to open while the chosen lock is engaged. Closing and stopping are always allowed.",
+          "data": {
+            "name": "Name",
+            "cover_entity": "Source cover",
+            "lock_entity": "Lock entity",
+            "invert": "Invert lock state"
+          },
+          "data_description": {
+            "name": "Friendly name for the proxy cover entity.",
+            "cover_entity": "The real cover this proxy forwards its commands to.",
+            "lock_entity": "While this entity is locked, opening commands are rejected.",
+            "invert": "Treat the lock entity as locked when it is off or unlocked."
+          }
         },
-        "data_description": {
-          "lock_entity": "While this entity is locked, opening commands are rejected.",
-          "invert": "Treat the lock entity as locked when it is off or unlocked."
+        "reconfigure": {
+          "title": "Reconfigure lockable cover",
+          "description": "This proxy controls {source_entity}. The source cover cannot be changed, because that would change the identity of the entity.",
+          "data": {
+            "name": "Name",
+            "lock_entity": "Lock entity",
+            "invert": "Invert lock state"
+          },
+          "data_description": {
+            "name": "Friendly name for the proxy cover entity.",
+            "lock_entity": "While this entity is locked, opening commands are rejected.",
+            "invert": "Treat the lock entity as locked when it is off or unlocked."
+          }
         }
+      },
+      "error": {
+        "recursive_source": "The selected cover is already a lockable cover proxy. Pick the underlying cover instead.",
+        "already_configured": "This cover already has a lockable cover proxy."
+      },
+      "abort": {
+        "reconfigure_successful": "The lockable cover was updated."
       }
     }
   },

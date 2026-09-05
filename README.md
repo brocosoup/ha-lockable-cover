@@ -32,7 +32,13 @@ directory and restart.
 
 ## Configuration
 
-The setup dialog asks for four things:
+Add the integration **once**, from **Settings → Devices & services → Add integration
+→ Lockable Cover**. It has no settings of its own.
+
+Then, on the integration's page, use **Add cover** for each cover you want to protect.
+Every cover you add becomes its own entity; you never add the integration a second time.
+
+Each cover asks for four things:
 
 | Field | Meaning |
 | --- | --- |
@@ -44,9 +50,18 @@ The setup dialog asks for four things:
 Each source cover can only be wrapped once, and a lockable cover proxy cannot be used as
 the source for another proxy.
 
-After setup, **Configure** on the integration entry lets you change the lock entity and
-the invert flag. The source cover is fixed at setup time, because changing it would change
-the identity of the proxy entity. Changing options reloads the entry automatically.
+**Reconfigure** on a cover lets you change its name, lock entity, and invert flag. The
+source cover is fixed once created, because changing it would change the identity of the
+entity. Changes take effect immediately.
+
+To remove one cover, delete that entry from the integration's page; the others are
+untouched.
+
+### Upgrading from 0.2.x
+
+Versions before 0.3.0 used one config entry per cover. On upgrade, each existing entry is
+migrated automatically into the new model, keeping its `entity_id`, name, and history.
+No action is required.
 
 ## Important: the proxy is not a firewall
 
@@ -112,8 +127,8 @@ being opened, while still allowing it to be closed at any time.
 
 1. Create a helper toggle: **Settings → Devices & services → Helpers → Create helper →
    Toggle**, named `Garage door lock`. This gives you `input_boolean.garage_door_lock`.
-2. Add the integration: **Settings → Devices & services → Add integration → Lockable
-   Cover**.
+2. Add the integration if it is not there yet: **Settings → Devices & services → Add
+   integration → Lockable Cover**. Then choose **Add cover** on its page.
    - **Name**: `Garage door (safe)`
    - **Source cover**: `cover.garage_door`
    - **Lock entity**: `input_boolean.garage_door_lock`
