@@ -29,7 +29,6 @@ from homeassistant.const import (
     SERVICE_STOP_COVER_TILT,
     STATE_CLOSED,
     STATE_CLOSING,
-    STATE_LOCKED,
     STATE_ON,
     STATE_OPENING,
     STATE_UNAVAILABLE,
@@ -47,7 +46,10 @@ from .const import CONF_COVER_ENTITY, CONF_INVERT, CONF_LOCK_ENTITY, CONF_NAME, 
 
 _LOGGER = logging.getLogger(__name__)
 
-LOCKED_STATES: frozenset[str] = frozenset({STATE_ON, STATE_LOCKED})
+# The lock domain's locked state is spelled out here on purpose: it was
+# dropped from homeassistant.const, and importing LockState would make this
+# integration depend on the lock component even when the lock is a switch.
+LOCKED_STATES: frozenset[str] = frozenset({STATE_ON, "locked"})
 UNUSABLE_STATES: frozenset[str] = frozenset({STATE_UNAVAILABLE, STATE_UNKNOWN})
 
 

@@ -11,7 +11,7 @@ Configuration is entirely through the UI. There is no YAML.
 
 ## Requirements
 
-- Home Assistant 2024.10.0 or newer
+- Home Assistant 2026.9.0 or newer
 - No third-party Python dependencies
 
 ## Installation with HACS
