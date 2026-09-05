@@ -1,0 +1,50 @@
+{
+  "title": "Lockable Cover",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Add lockable cover",
+        "description": "Create a cover proxy that refuses to open while the chosen lock is engaged. Closing and stopping are always allowed.",
+        "data": {
+          "name": "Name",
+          "cover_entity": "Source cover",
+          "lock_entity": "Lock entity",
+          "invert": "Invert lock state"
+        },
+        "data_description": {
+          "name": "Friendly name for the proxy cover entity.",
+          "cover_entity": "The real cover this proxy forwards its commands to.",
+          "lock_entity": "While this entity is locked, opening commands are rejected.",
+          "invert": "Treat the lock entity as locked when it is off or unlocked."
+        }
+      }
+    },
+    "error": {
+      "recursive_source": "The selected cover is already a lockable cover proxy. Pick the underlying cover instead."
+    },
+    "abort": {
+      "already_configured": "This cover already has a lockable cover proxy."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Lockable cover options",
+        "description": "Change which entity locks this cover. The source cover cannot be changed after setup.",
+        "data": {
+          "lock_entity": "Lock entity",
+          "invert": "Invert lock state"
+        },
+        "data_description": {
+          "lock_entity": "While this entity is locked, opening commands are rejected.",
+          "invert": "Treat the lock entity as locked when it is off or unlocked."
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "cover_locked": {
+      "message": "{entity_id} cannot be opened because {lock_entity_id} is locked. Closing and stopping are still available."
+    }
+  }
+}
