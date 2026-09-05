@@ -63,6 +63,12 @@ Versions before 0.3.0 used one config entry per cover. On upgrade, each existing
 migrated automatically into the new model, keeping its `entity_id`, name, and history.
 No action is required.
 
+## Icon
+
+The integration ships its own icon in `custom_components/lockable_cover/brand/`.
+Home Assistant serves brand images from a custom integration's `brand/` directory before
+falling back to the brands CDN, so no submission to `home-assistant/brands` is needed.
+
 ## Important: the proxy is not a firewall
 
 Commands sent **directly to the source cover** are not intercepted. This integration adds
